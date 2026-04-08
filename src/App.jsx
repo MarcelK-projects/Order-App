@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Menu from './components/Menu.jsx';
 import Cart from './components/Cart.jsx';
 import Checkout from './components/Checkout.jsx';
+import Success from './components/Success.jsx';
 
 function App() {
   const [items, setItems] = useState([]);
@@ -9,9 +10,10 @@ function App() {
   const [order, setOrder] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [success, setSuccess] = useState(false);
   const checkoutModal = useRef();
   const cartModal = useRef();
-  
+  const successModal = useRef();
 
   useEffect(() => {
       
@@ -30,8 +32,8 @@ function App() {
     const selectMeal = (item) => {
       console.log("bin in selectMeal");
       setOrder((prev) => [item, ...prev]);
-      fetch("http://localhost:3000/orders", {
-        method: "PUT",
+      fetch("../../backend/data/orders.json", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -42,6 +44,9 @@ function App() {
     const deleteOrder = (target) => {
       console.log("bin in deleteOrder");
       setOrder((prev) => deleteOne(prev, target.id))
+      if (order.length === 1) {
+        setCartOpen(!cartOpen);
+      }
     }
 
     const deleteOne = (arr, targetId) => {
@@ -51,8 +56,10 @@ function App() {
     }
 
     const showCart = () => {
+      if(order.length !==0 || cartOpen === true) {
       setCartOpen(!cartOpen);
       setCheckoutOpen(false);
+      }
     }
 
     const showCheckout = () => {
@@ -60,13 +67,30 @@ function App() {
       setCartOpen(checkoutOpen ? true : false);
     }
 
+    const showSuccess = () => {
+      setSuccess(!success);
+      setCartOpen(false);
+      setCheckoutOpen(false);
+      if (success) {
+        setOrder([]);
+      }
+    }
+
   return (
-    <>
-      <img src=""/>
-      <h1 id="main-header">REACTFOOD
+    <div>
+      <header id="main-header">
+        <div id="title">
+        <img src="./logo.jpg"/>
+        <h1>REACTFOOD</h1>
+        </div>
         <button onClick={showCart}>Cart({order.length})</button>
-      </h1>
-      <Menu items={items} loading={loading} order={order} onClick={selectMeal} />
+      </header>
+      <Menu 
+        items={items} 
+        loading={loading} 
+        order={order} 
+        onClick={selectMeal} 
+      />
       <Cart 
         cart={cartOpen} 
         checkout={checkoutOpen} 
@@ -76,8 +100,19 @@ function App() {
         addOrder={selectMeal} 
         deleteOrder={deleteOrder} 
       />
-      <Checkout open={checkoutOpen} ref={checkoutModal} showCheckout={showCheckout} />
-    </>
+      <Checkout 
+        open={checkoutOpen} 
+        ref={checkoutModal} 
+        showCheckout={showCheckout} 
+        showSuccess={showSuccess} 
+        success={success} 
+      />
+      <Success 
+        ref={successModal}
+        showSuccess={showSuccess}
+        success={success}
+      />
+    </div>
   );
 }
 
